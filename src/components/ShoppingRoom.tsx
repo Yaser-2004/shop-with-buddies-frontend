@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Plus, Copy, ExternalLink } from 'lucide-react';
+import { Users, Plus, Copy, ExternalLink,UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { InviteModal } from '@/components/InviteModal';
 import axios from 'axios';
 import { useAppContext } from "@/context/AppContext";
 import { socket } from "@/lib/socket";
@@ -187,6 +188,11 @@ export const ShoppingRoom = () => {
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
+                    <InviteModal roomCode={room.id}>
+                      <Button variant="ghost" size="sm">
+                        <UserPlus className="w-4 h-4" />
+                      </Button>
+                    </InviteModal>
                     <Button
                       size="sm"
                       onClick={() => joinRoom(room.id)}
