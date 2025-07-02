@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Search, ShoppingBag, Users, ShoppingCart, Package, Heart } from 'lucide-react';
+import { SearchDropdown } from './SearchDropdown';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ActiveUsersDropdown } from './ActiveUsersDropdown';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -47,15 +48,7 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
 
           {/* Search bar - Hidden on mobile, shown on md+ */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-              <Input
-                placeholder="Search products, brands, or stores..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full rounded-full border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
-              />
-            </div>
+            <SearchDropdown className="w-full" />
           </div>
 
           {/* Right section */}
