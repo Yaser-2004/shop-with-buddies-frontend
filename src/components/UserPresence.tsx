@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, Crown, Eye } from 'lucide-react';
+import { InviteModal } from './InviteModal';
 import { useAppContext } from '@/context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '@/lib/socket';
@@ -94,10 +95,12 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
             <Badge variant="secondary" className="bg-green-100 text-green-700">
               {users.length} active
             </Badge>
-            <Button variant="outline" size="sm">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Invite
-            </Button>
+            <InviteModal roomCode={roomId}>
+              <Button variant="outline" size="sm">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite
+              </Button>
+            </InviteModal>
           </div>
           <div className="space-y-2">
             {isHost && (
