@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Search, ShoppingBag, Users, ShoppingCart, Package, Heart } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ActiveUsersDropdown } from './ActiveUsersDropdown';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 
 interface ShoppingHeaderProps {
@@ -65,14 +66,7 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
                 3
               </Badge>
             </Button>
-            
-            <Button variant="ghost" size="sm" className="relative">
-              <Users className="w-5 h-5" />
-              <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 text-xs bg-green-500">
-                2
-              </Badge>
-            </Button>
-
+            <ActiveUsersDropdown />
             <ThemeToggle />
 
             <UserProfileDropdown />
