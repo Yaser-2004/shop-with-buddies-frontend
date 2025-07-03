@@ -1,13 +1,28 @@
 // src/context/AppContext.jsx
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
-  const [roomCode, setRoomCode] = useState(null);
+  const [roomCode, setRoomCode] = useState(localStorage.getItem("roomCode") || null);
   const [sharedCart, setSharedCart] = useState([]);
   const [personalCart, setPersonalCart] = useState([]);
+
+  // ✅ New: user & token
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  // ✅ On app mount, restore from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
+
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+      setToken(savedToken);
+    }
+  }, []);
 
   return (
     <AppContext.Provider value={{
@@ -18,7 +33,11 @@ export const AppProvider = ({ children }) => {
       sharedCart,
       setSharedCart,
       personalCart,
-      setPersonalCart
+      setPersonalCart,
+      user,
+      setUser,
+      token,
+      setToken
     }}>
       {children}
     </AppContext.Provider>

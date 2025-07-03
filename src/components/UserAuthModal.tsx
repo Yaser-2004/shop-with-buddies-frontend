@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { User, Mail, Lock, Phone } from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
+import { useAppContext } from '@/context/AppContext';
 
 interface UserAuthModalProps {
   children: React.ReactNode;
@@ -16,25 +19,84 @@ interface UserAuthModalProps {
 export const UserAuthModal = ({ children }: UserAuthModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const [signupData, setSignupData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: ''
   });
+  const { setUser, setToken } = useAppContext();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', loginData);
-    setIsOpen(false);
+    setLoading(true);
+
+    try {
+        const response = await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/auth/login`, {
+            email: loginData.email,
+            password: loginData.password
+        });
+        if (response.data) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            setToken(response.data.token);  // ✅ update context
+            setUser(response.data.user);    // ✅ update context
+
+            toast.success('Login successful!');
+        } else {
+            toast.error(response.data.message || 'Login failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        toast.error('Login failed. Please check your credentials and try again.');
+        return;
+    } finally {
+        setLoading(false);
+        setIsOpen(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Signup:', signupData);
-    setIsOpen(false);
+    setLoading(true);
+
+    if (signupData.password !== signupData.confirmPassword) {
+        toast.error('Passwords do not match.');
+        setLoading(false);
+        return;
+    }
+
+    try {
+        const response = await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/auth/register`, {
+            firstName: signupData.firstName,
+            lastName: signupData.lastName,
+            email: signupData.email,
+            password: signupData.password,
+        });
+        console.log(response);
+        if (response.data) {
+            console.log(response.data);
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            setToken(response.data.token);  // ✅ update context
+            setUser(response.data.user);    // ✅ update context
+            toast.success('Signup successful!');
+            // Handle successful signup, e.g., redirect or update user state
+        } else {
+            toast.error(response.data.message || 'Signup failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Signup error:', error);
+        toast.error('Signup failed. Please try again.');
+        return;
+    } finally {
+        setLoading(false);
+        setIsOpen(false);
+    }
   };
 
   const handleGoogleAuth = () => {
@@ -114,8 +176,8 @@ export const UserAuthModal = ({ children }: UserAuthModalProps) => {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
-                    Sign In
+                  <Button type="submit" className={`w-full bg-purple-600 hover:bg-purple-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={loading}>
+                    {loading ? 'Loading...' : 'Sign In'}
                   </Button>
                 </form>
                 
@@ -196,20 +258,6 @@ export const UserAuthModal = ({ children }: UserAuthModalProps) => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
-                        className="pl-10"
-                        value={signupData.phone}
-                        onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="signupPassword">Password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -239,8 +287,8 @@ export const UserAuthModal = ({ children }: UserAuthModalProps) => {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
-                    Create Account
+                  <Button type="submit" className={`w-full bg-purple-600 hover:bg-purple-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={loading}>
+                    {loading ? 'Loading...' : 'Create Account'}
                   </Button>
                 </form>
               </CardContent>

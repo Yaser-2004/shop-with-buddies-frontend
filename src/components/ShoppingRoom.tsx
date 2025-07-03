@@ -24,6 +24,7 @@ export const ShoppingRoom = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { roomCode, setRoomCode } = useAppContext();
+  const { user, token } = useAppContext();
 
   const mockActiveRooms = [
     { id: 'room1', name: 'Weekend Shopping', members: 3, host: 'Sarah M.', activity: 'Electronics' },
@@ -41,9 +42,6 @@ export const ShoppingRoom = () => {
 
       const { roomCode } = response.data;
       setRoomCode(roomCode);
-
-      // Optional: Save username in localStorage for later use
-      localStorage.setItem("username", username);
       localStorage.setItem("roomCode", roomCode);
 
       if (!socket.connected) socket.connect();
@@ -65,7 +63,7 @@ export const ShoppingRoom = () => {
 
   const joinRoom = async (roomId: string) => {
     try {
-      if (!localStorage.getItem("username")) {
+      if (!user) {
         return toast({ title: "Please login before joining", description: "Go to settings to set your username", variant: "destructive" });
       } 
 
@@ -74,7 +72,7 @@ export const ShoppingRoom = () => {
 
       // Proceed to join
       socket.connect();
-      socket.emit("join-room", { roomCode: roomId, username: localStorage.getItem("username")});
+      socket.emit("join-room", { roomCode: roomId, username: user?.firstName });
 
       localStorage.setItem("roomCode", roomId);
       setRoomCode(roomId);
@@ -111,7 +109,7 @@ export const ShoppingRoom = () => {
               Start a new shopping session and invite friends to join you
             </p>
             <Button 
-              onClick={createRoom.bind(null, localStorage.getItem("username") || "Yaser" )}
+              onClick={createRoom.bind(null, user?.firstName || '')}
               disabled={isCreating}
               className="w-full bg-white text-purple-600 hover:bg-gray-100"
             >
