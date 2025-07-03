@@ -32,12 +32,12 @@ export const ShoppingRoom = () => {
     { id: 'room3', name: 'Home Decor Hunt', members: 2, host: 'Lisa K.', activity: 'Home & Garden' },
   ];
 
-  const createRoom = async (username: string) => {
-    if (!username) return alert("Please enter a username!");
+  const createRoom = async (userId: string) => {
+    if (!userId) return alert("Please enter a username!");
     try {
       setIsCreating(true);
       const response = await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/rooms/create`, {
-        username: username.trim()
+        userId
       });
 
       const { roomCode } = response.data;
@@ -45,7 +45,7 @@ export const ShoppingRoom = () => {
       localStorage.setItem("roomCode", roomCode);
 
       if (!socket.connected) socket.connect();
-      socket.emit("join-room", { roomCode, username: username.trim() });
+      socket.emit("join-room", { roomCode, userId });
 
       // Redirect to the room
       navigate(`/room/${roomCode}`);
@@ -72,7 +72,7 @@ export const ShoppingRoom = () => {
 
       // Proceed to join
       socket.connect();
-      socket.emit("join-room", { roomCode: roomId, username: user?.firstName });
+      socket.emit("join-room", { roomCode: roomId, userId: user?._id });
 
       localStorage.setItem("roomCode", roomId);
       setRoomCode(roomId);
@@ -109,7 +109,7 @@ export const ShoppingRoom = () => {
               Start a new shopping session and invite friends to join you
             </p>
             <Button 
-              onClick={createRoom.bind(null, user?.firstName || '')}
+              onClick={createRoom.bind(null, user?._id || '')}
               disabled={isCreating}
               className="w-full bg-white text-purple-600 hover:bg-gray-100"
             >

@@ -1,4 +1,4 @@
-
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -15,44 +15,57 @@ interface UserPresenceProps {
 }
 
 export const UserPresence = ({ roomId }: UserPresenceProps) => {
-  const users = [
-    {
-      id: 1,
-      name: 'Sarah Miller',
-      initials: 'SM',
-      status: 'online',
-      activity: 'Browsing Electronics',
-      isHost: true,
-      cursor: { x: 45, y: 67 }
-    },
-    {
-      id: 2,
-      name: 'Mike Rodriguez',
-      initials: 'MR',
-      status: 'online',
-      activity: 'Viewing Wishlist',
-      isHost: false,
-      cursor: { x: 78, y: 23 }
-    },
-    {
-      id: 3,
-      name: 'You',
-      initials: 'JD',
-      status: 'online',
-      activity: 'Active',
-      isHost: false,
-      cursor: { x: 60, y: 45 }
-    }
-  ];
-
   const navigate = useNavigate();
-  const isHost = localStorage.getItem('isHost') === 'true';
-  const roomCode = localStorage.getItem('roomCode');
-  const username = localStorage.getItem('username') || '';
-  const {setRoomCode, setSharedCart} = useAppContext();
+  const { setRoomCode, setSharedCart } = useAppContext();
+
+  const {users, setUsers} = useAppContext();
+  const [hostId, setHostId] = useState<string | null>(null);
+  const {user} = useAppContext();
+
+  const isHost = hostId === user?._id;
+
+  const fetchRoomUsers = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/rooms/${roomId}/members`);
+      setUsers(res.data.members);
+      setHostId(res.data.host);
+    } catch (err) {
+      console.error("Failed to fetch room members:", err);
+    }
+  };
+
+    useEffect(() => {
+      const handleUserJoined = (data: { user: any }) => {
+        console.log('User joined:', data.user);
+        setUsers((prev) => {
+          // Avoid duplicates
+          const exists = prev.find((u) => u._id === data.user._id);
+          return exists ? prev : [...prev, data.user];
+        });
+      };
+
+      const handleUserLeft = (data: { userId: string }) => {
+        console.log('User left:', data.userId);
+        setUsers((prev) => prev.filter((u) => u._id !== data.userId));
+      };
+
+      socket.on('user-joined', handleUserJoined);
+      socket.on('user-left', handleUserLeft);
+
+      return () => {
+        socket.off('user-joined', handleUserJoined);
+        socket.off('user-left', handleUserLeft);
+      };
+    }, []);
+
+
+
+  useEffect(() => {
+    fetchRoomUsers();
+  }, [roomId]);
 
   const leaveRoom = () => {
-    socket.emit('leave-room', { roomCode, username });
+    socket.emit('leave-room', { roomCode: roomId, userId: user?._id });
     socket.disconnect();
     localStorage.removeItem('roomCode');
     setRoomCode(null);
@@ -62,8 +75,11 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
 
   const endRoom = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/rooms/end`, { roomCode });
-      socket.emit('end-room', roomCode);
+      await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/rooms/end`, {
+        roomCode: roomId,
+        userId: user?._id,
+      });
+      socket.emit('end-room', roomId);
     } catch (err) {
       console.error('Failed to end room', err);
     } finally {
@@ -127,57 +143,35 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
           <CardTitle>Active Members</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {users.map((user) => (
-            <div key={user.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          {users.map((usr: any) => (
+            <div key={usr._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="relative">
                 <Avatar className="w-10 h-10">
                   <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                    {user.initials}
+                    {usr.firstName?.[0] ?? '?'}
+                    {usr.lastName?.[0] ?? ''}
                   </AvatarFallback>
                 </Avatar>
-                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(user.status)}`} />
-                {user.isHost && (
+                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor('online')}`} />
+                {usr._id === hostId && (
                   <Crown className="absolute -top-1 -right-1 w-4 h-4 text-yellow-500 fill-yellow-500" />
                 )}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
-                  <h4 className="font-medium text-xs">{user.name}</h4>
+                  <h4 className="font-medium text-xs">
+                    {usr.firstName} {usr.lastName}
+                    {usr._id === user?._id ? ' (You)' : ''}
+                  </h4>
                 </div>
                 <div className="flex items-center space-x-1 text-xs text-gray-500">
                   <Eye className="w-3 h-3" />
-                  <span>{user.activity}</span>
+                  <span>Active</span>
                 </div>
               </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
-
-      {/* Live Cursors Visualization */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Live Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative bg-gray-100 rounded-lg h-32 overflow-hidden">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 animate-pulse"
-                style={{
-                  left: `${user.cursor.x}%`,
-                  top: `${user.cursor.y}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-                title={user.name}
-              />
-            ))}
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
-              Live cursors on shared screen
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

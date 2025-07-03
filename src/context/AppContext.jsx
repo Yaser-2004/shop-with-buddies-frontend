@@ -7,6 +7,7 @@ export const AppProvider = ({ children }) => {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
   const [roomCode, setRoomCode] = useState(localStorage.getItem("roomCode") || null);
   const [sharedCart, setSharedCart] = useState([]);
+  const [users, setUsers] = useState([]); 
   const [personalCart, setPersonalCart] = useState([]);
 
   // ✅ New: user & token
@@ -37,7 +38,9 @@ export const AppProvider = ({ children }) => {
       user,
       setUser,
       token,
-      setToken
+      setToken,
+      users,
+      setUsers
     }}>
       {children}
     </AppContext.Provider>

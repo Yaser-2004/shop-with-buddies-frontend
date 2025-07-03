@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Video, Phone, Mic, MicOff, VideoOff, PhoneOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/AppContext';
 
 interface VideoCallPanelProps {
   roomId: string;
@@ -24,11 +25,7 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const { toast } = useToast();
-
-  const mockParticipants: CallParticipant[] = [
-    { id: '1', name: 'Sarah M.', isVideoOn: true, isAudioOn: true, avatar: 'SM' },
-    { id: '2', name: 'Mike R.', isVideoOn: false, isAudioOn: true, avatar: 'MR' },
-  ];
+  const {users} = useAppContext();
 
   const startVideoCall = () => {
     setIsCallActive(true);
@@ -109,13 +106,14 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Online Members</div>
             <div className="flex -space-x-2">
-              {mockParticipants.map((participant) => (
+              {users.map((participant) => (
                 <div
-                  key={participant.id}
+                  key={participant._id}
                   className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs flex items-center justify-center border-2 border-white dark:border-gray-900"
-                  title={participant.name}
+                  title={participant.firstName}
                 >
-                  {participant.avatar}
+                  {participant.firstName?.[0] ?? '?'}
+                  {participant.lastName?.[0] ?? ''}
                 </div>
               ))}
             </div>
@@ -153,7 +151,7 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
             
             {/* Participant videos */}
             <div className="grid grid-cols-2 gap-2">
-              {mockParticipants.map((participant) => (
+              {users.map((participant) => (
                 <div key={participant.id} className="relative bg-gray-800 rounded aspect-video flex items-center justify-center">
                   {participant.isVideoOn ? (
                     <div className="text-white text-xs">{participant.name}</div>
@@ -207,7 +205,7 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
         </div>
 
         <div className="text-xs text-center text-gray-500 dark:text-gray-400">
-          {mockParticipants.length + 1} participants in call
+          {users.length + 1} participants in call
         </div>
       </CardContent>
     </Card>

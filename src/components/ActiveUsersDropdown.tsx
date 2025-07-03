@@ -72,7 +72,7 @@ export const ActiveUsersDropdown = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
           <Users className="w-5 h-5" />
-          <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 text-xs bg-green-500 hover:bg-green-500">
+          <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs bg-green-500 hover:bg-green-500">
             {onlineUsers.length}
           </Badge>
         </Button>

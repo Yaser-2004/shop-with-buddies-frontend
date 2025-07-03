@@ -10,15 +10,15 @@ const ChatInterface = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const {user} = useAppContext();
 
   const toggleChat = () => setIsOpen(!isOpen);
   const bottomRef = useRef(null);
 
-  const username = localStorage.getItem('username') || '';
   const roomCode = localStorage.getItem('roomCode') || '';
 
   useEffect(() => {
-    if (!socket || !roomCode || !username) return;
+    if (!socket || !roomCode || !user) return;
     if (!socket.connected) socket.connect();
 
     // Join the room on socket connection
@@ -32,7 +32,7 @@ const ChatInterface = () => {
     return () => {
       socket.off('receive-message');
     };
-  }, [roomCode, username]);
+  }, [roomCode, user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,7 +42,7 @@ const ChatInterface = () => {
     if (!input.trim()) return;
 
     const messageData = {
-      sender: username,
+      sender: user?.firstName || 'Anonymous',
       text: input,
       timestamp: new Date().toISOString(),
     };
@@ -84,10 +84,10 @@ const ChatInterface = () => {
 
             <div className="flex-1 p-3 overflow-y-auto space-y-3">
               {messages.map((msg, idx) => (
-                <div key={idx} className={`flex ${msg.sender === username ? 'justify-end' : 'justify-start'}`}>
+                <div key={idx} className={`flex ${msg.sender === user?.firstName ? 'justify-end' : 'justify-start'}`}>
                   <div
                     className={`px-3 py-2 bg-pink-500 rounded-lg max-w-[80%] text-sm ${
-                      msg.sender === username
+                      msg.sender === user?.firstName
                         ? 'bg-blue-500 text-white'
                         : 'bg-gray-200 text-gray-800'
                     }`}
