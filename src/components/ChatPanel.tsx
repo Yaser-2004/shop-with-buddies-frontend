@@ -75,7 +75,7 @@ const ChatInterface = () => {
             exit={{ opacity: 0, y: 30 }}
             className="w-80 h-[450px] bg-white rounded-lg shadow-xl flex flex-col"
           >
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 rounded-t-lg flex justify-between items-center">
+            <div className="bg-blue-600 text-white p-3 rounded-t-lg flex justify-between items-center">
               <span className="font-semibold">Room Chat</span>
               <button onClick={toggleChat}>
                 <X className="w-5 h-5" />
@@ -86,7 +86,7 @@ const ChatInterface = () => {
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.sender === user?.firstName ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`px-3 py-2 bg-pink-500 rounded-lg max-w-[80%] text-sm ${
+                    className={`px-3 py-2 bg-blue-500 rounded-lg max-w-[80%] text-sm ${
                       msg.sender === user?.firstName
                         ? 'bg-blue-500 text-white'
                         : 'bg-gray-200 text-gray-800'
@@ -106,12 +106,12 @@ const ChatInterface = () => {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                className="flex-1 border rounded-l px-3 py-2 text-sm outline-none"
+                className="flex-1 border text-black rounded-l px-3 py-2 text-sm outline-none"
                 placeholder="Send a message..."
               />
               <button
                 onClick={sendMessage}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-r text-sm"
+                className="bg-blue-600 text-white px-4 py-2 rounded-r text-sm"
               >
                 Send
               </button>
