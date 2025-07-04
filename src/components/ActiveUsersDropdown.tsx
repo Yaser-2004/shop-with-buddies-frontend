@@ -107,7 +107,7 @@ export const ActiveUsersDropdown = () => {
                       <div className="flex items-center space-x-3">
                         <div className="relative">
                           <Avatar className="w-10 h-10">
-                            <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm">
+                            <AvatarFallback className="bg-blue-600 text-white text-sm">
                               {user.initials}
                             </AvatarFallback>
                           </Avatar>
