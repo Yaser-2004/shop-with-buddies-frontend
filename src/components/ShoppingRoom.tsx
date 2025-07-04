@@ -151,7 +151,7 @@ export const ShoppingRoom = () => {
 
       {/* Active Rooms */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Active Shopping Rooms</h2>
+        <h2 className="text-2xl font-bold mb-6 text-blue-800">Active Shopping Rooms</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {mockActiveRooms.map((room) => (
             <Card key={room.id} className="hover:shadow-lg transition-shadow cursor-pointer">
