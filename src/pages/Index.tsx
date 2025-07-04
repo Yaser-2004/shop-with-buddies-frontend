@@ -84,7 +84,7 @@ const Index = () => {
             {!localStorage.getItem('roomCode') ? (
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-8">
-                  <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                  <h1 className="text-4xl md:text-5xl font-bold bg-blue-600 bg-clip-text text-transparent mb-4">
                     Shop Together, Decide Together
                   </h1>
                   <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6">
