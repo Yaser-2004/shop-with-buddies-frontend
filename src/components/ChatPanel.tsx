@@ -61,7 +61,7 @@ const ChatInterface = () => {
       {!isOpen && (
         <button
           onClick={toggleChat}
-          className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition"
+          className="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition"
         >
           <MessageCircle className="w-6 h-6" />
         </button>
