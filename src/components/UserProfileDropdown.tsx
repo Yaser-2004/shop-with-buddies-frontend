@@ -73,7 +73,7 @@ export const UserProfileDropdown = () => {
         <Button variant="ghost" size="sm" className="relative">
           <Avatar className="w-8 h-8">
             <AvatarImage src="" />
-            <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm">
+            <AvatarFallback className="bg-blue-600 text-white text-sm">
               {user?.firstName[0]}{user?.lastName[0]}
             </AvatarFallback>
           </Avatar>
