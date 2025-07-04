@@ -147,7 +147,7 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
             <div key={usr._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="relative">
                 <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                  <AvatarFallback className="bg-blue-600 to-pink-600 text-white">
                     {usr.firstName?.[0] ?? '?'}
                     {usr.lastName?.[0] ?? ''}
                   </AvatarFallback>
