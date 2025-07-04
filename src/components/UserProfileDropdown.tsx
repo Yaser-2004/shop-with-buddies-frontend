@@ -85,7 +85,7 @@ export const UserProfileDropdown = () => {
             <div className="flex items-center space-x-3">
               <Avatar className="w-12 h-12">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                <AvatarFallback className="bg-blue-600 text-white">
                   {/* {user.name.split(' ').map(n => n[0]).join('')} */}
                   {user?.firstName[0]}{user?.lastName[0]}
                 </AvatarFallback>
