@@ -53,12 +53,6 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
 
           {/* Right section */}
          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="w-5 h-5" />
-              <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs bg-red-500">
-                3
-              </Badge>
-            </Button>
             <ActiveUsersDropdown />
             <ThemeToggle />
 
