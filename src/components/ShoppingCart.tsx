@@ -73,7 +73,7 @@ export const ShoppingCart = ({
             <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
             <p className="text-gray-600 mb-6">Add some products to get started!</p>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+            <Button className="bg-blue-600 hover:from-purple-700 hover:to-pink-700">
               Continue Shopping
             </Button>
           </CardContent>
