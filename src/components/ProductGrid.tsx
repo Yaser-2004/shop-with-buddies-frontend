@@ -394,7 +394,7 @@ export const ProductGrid = ({
                       className={`
                         cursor-pointer border transition-all duration-200
                         ${currentPage === page
-                          ? 'bg-purple-600 text-white border-purple-600 hover:bg-purple-700'
+                          ? 'bg-blue-600 text-white border-purple-600 hover:bg-purple-700'
                           : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                         }
                       `}
