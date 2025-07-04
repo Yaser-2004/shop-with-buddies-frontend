@@ -87,7 +87,7 @@ const Index = () => {
                   <h1 className="text-4xl md:text-5xl font-bold bg-blue-600 bg-clip-text text-transparent mb-4">
                     Shop Together, Decide Together
                   </h1>
-                  <p className="text-lg md:text-3xl text-blue-600 dark:text-gray-300 mb-6">
+                  <p className="text-lg md:text-3xl text-blue-600 dark:text-blue-500 mb-6">
                     Experience the joy of shopping with friends in real-time, or browse solo
                   </p>
                   <ShoppingRoom />
