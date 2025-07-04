@@ -33,26 +33,26 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
   ];
 
   return (
-    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+          <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-white" />
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+           <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
               CoShop
             </span>
           </div>
 
           {/* Search bar - Hidden on mobile, shown on md+ */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <div className="hidden md:flex flex-1 max-w-2xl mx-4 lg:mx-8">
             <SearchDropdown className="w-full" />
           </div>
 
           {/* Right section */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+         <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="w-5 h-5" />
               <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs bg-red-500">
@@ -67,8 +67,8 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
         </div>
 
         {/* Navigation tabs */}
-        <div className="flex items-center justify-center mt-4 border-t dark:border-gray-700 pt-4">
-          <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          <div className="flex items-center justify-center mt-3 sm:mt-4 border-t border-gray-800 pt-3 sm:pt-4">
+          <div className="flex flex-wrap sm:space-x-1 bg-gray-900 rounded-lg p-1 w-full sm:w-auto justify-center">
             {!localStorage.getItem('roomCode') ? tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -77,16 +77,16 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
                   variant={activeTab === tab.id ? "default" : "ghost"}
                   size="sm"
                   onClick={() => onTabChange(tab.id)}
-                  className={`relative ${
+                  className={`relative m-1 sm:m-0 flex-1 sm:flex-none min-w-0 ${
                     activeTab === tab.id 
-                      ? "bg-white dark:bg-gray-700 shadow-sm" 
-                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700" 
+                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                 <Icon className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm truncate">{tab.label}</span>
                   {tab.badge && tab.badge > 0 && (
-                    <Badge className="ml-2 bg-purple-600 text-white text-xs px-1.5 py-0.5">
+                    <Badge className="ml-1 sm:ml-2 bg-blue-500 text-white text-xs px-1 py-0 min-w-0 flex-shrink-0">
                       {tab.badge}
                     </Badge>
                   )}
@@ -100,16 +100,16 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
                   variant={activeTab === tab.id ? "default" : "ghost"}
                   size="sm"
                   onClick={() => onTabChange(tab.id)}
-                  className={`relative ${
+                    className={`relative m-1 sm:m-0 flex-1 sm:flex-none min-w-0 ${
                     activeTab === tab.id 
-                      ? "bg-white dark:bg-gray-700 shadow-sm" 
-                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700" 
+                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <Icon className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm truncate">{tab.label}</span>
                   {tab.badge && tab.badge > 0 && (
-                    <Badge className="ml-2 bg-purple-600 text-white text-xs px-1.5 py-0.5">
+                       <Badge className="ml-1 sm:ml-2 bg-blue-500 text-white text-xs px-1 py-0 min-w-0 flex-shrink-0">
                       {tab.badge}
                     </Badge>
                   )}
@@ -120,7 +120,7 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
         </div>
 
         {/* Mobile search bar */}
-        <div className="md:hidden mt-4">
+        <div className="md:hidden mt-3 sm:mt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
             <Input
