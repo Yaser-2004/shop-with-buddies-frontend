@@ -97,7 +97,7 @@ export const ShoppingRoom = () => {
       {/* Create or Join Room */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Create Room */}
-        <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0">
+        <Card className="bg-blue-500 to-pink-500 text-white border-0">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Plus className="w-5 h-5" />
@@ -119,7 +119,7 @@ export const ShoppingRoom = () => {
         </Card>
 
         {/* Join Room */}
-        <Card className="bg-gradient-to-br from-blue-500 to-teal-500 text-white border-0">
+        <Card className="bg-yellow-500 to-teal-500 text-white border-0">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <ExternalLink className="w-5 h-5" />
@@ -194,7 +194,7 @@ export const ShoppingRoom = () => {
                     <Button
                       size="sm"
                       onClick={() => joinRoom(room.id)}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      className="bg-blue-600 hover:from-purple-700 hover:to-pink-700"
                     >
                       Join
                     </Button>
