@@ -313,7 +313,7 @@ export const ProductGrid = ({
                     <div className="flex space-x-2">
                       <Button
                         size='sm'
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        className="bg-blue-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAddToCart(product);
