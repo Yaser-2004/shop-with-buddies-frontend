@@ -109,7 +109,7 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
               {users.map((participant) => (
                 <div
                   key={participant._id}
-                  className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs flex items-center justify-center border-2 border-white dark:border-gray-900"
+                  className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center border-2 border-white dark:border-gray-900"
                   title={participant.firstName}
                 >
                   {participant.firstName?.[0] ?? '?'}
