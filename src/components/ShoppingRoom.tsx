@@ -33,7 +33,7 @@ export const ShoppingRoom = () => {
   ];
 
   const createRoom = async (userId: string) => {
-    if (!userId) return alert("Please enter a username!");
+    if (!userId) return alert("Please login first!");
     try {
       setIsCreating(true);
       const response = await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/rooms/create`, {
