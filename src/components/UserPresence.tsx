@@ -40,6 +40,7 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
         setUsers((prev) => {
           // Avoid duplicates
           const exists = prev.find((u) => u._id === data.user._id);
+          console.log('User already exists:', exists);
           return exists ? prev : [...prev, data.user];
         });
       };
@@ -79,6 +80,9 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
         roomCode: roomId,
         userId: user?._id,
       });
+      localStorage.removeItem('roomCode');
+      setRoomCode(null);
+      setSharedCart([]);
       socket.emit('end-room', roomId);
     } catch (err) {
       console.error('Failed to end room', err);

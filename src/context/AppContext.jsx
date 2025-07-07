@@ -1,5 +1,7 @@
 // src/context/AppContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import { socket } from '@/lib/socket';
+import axios from 'axios';
 
 const AppContext = createContext();
 
@@ -9,6 +11,7 @@ export const AppProvider = ({ children }) => {
   const [sharedCart, setSharedCart] = useState([]);
   const [users, setUsers] = useState([]); 
   const [personalCart, setPersonalCart] = useState([]);
+  const [products, setProducts] = useState([]);
 
   // ✅ New: user & token
   const [user, setUser] = useState(null);
@@ -25,6 +28,17 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (!socket || !user || !roomCode) return;
+
+    // Emit join-room again on initial load / reconnect
+    socket.emit("join-room", {
+      roomCode,
+      userId: user._id,
+    });
+  }, [socket, user, roomCode]);
+
+
   return (
     <AppContext.Provider value={{
       username,
@@ -40,7 +54,9 @@ export const AppProvider = ({ children }) => {
       token,
       setToken,
       users,
-      setUsers
+      setUsers,
+      products,
+      setProducts,
     }}>
       {children}
     </AppContext.Provider>

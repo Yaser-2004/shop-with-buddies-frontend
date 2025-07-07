@@ -148,63 +148,6 @@ export const ShoppingRoom = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Active Rooms */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6 text-blue-800">Active Shopping Rooms</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockActiveRooms.map((room) => (
-            <Card key={room.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-lg">{room.name}</h3>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    {room.activity}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center space-x-2 mb-4">
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback className="text-xs bg-gray-200">
-                      {room.host.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-gray-600">Hosted by {room.host}</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1 text-sm text-gray-500">
-                    <Users className="w-4 h-4" />
-                    <span>{room.members} members</span>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyRoomLink(room.id)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                    <InviteModal roomCode={room.id}>
-                      <Button variant="ghost" size="sm">
-                        <UserPlus className="w-4 h-4" />
-                      </Button>
-                    </InviteModal>
-                    <Button
-                      size="sm"
-                      onClick={() => joinRoom(room.id)}
-                      className="bg-blue-600 hover:from-purple-700 hover:to-pink-700"
-                    >
-                      Join
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

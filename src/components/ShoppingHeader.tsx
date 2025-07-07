@@ -9,26 +9,28 @@ import { SearchDropdown } from './SearchDropdown';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ActiveUsersDropdown } from './ActiveUsersDropdown';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
+import { useAppContext } from '@/context/AppContext.jsx';
 
 interface ShoppingHeaderProps {
-  cartItemsCount: number;
   activeTab: 'browse' | 'cart' | 'orders' | 'wishlist';
   onTabChange: (tab: 'browse' | 'cart' | 'orders' | 'wishlist') => void;
 }
 
-export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: ShoppingHeaderProps) => {
+export const ShoppingHeader = ({ activeTab, onTabChange }: ShoppingHeaderProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const {sharedCart, personalCart, user, roomCode} = useAppContext();
+
+  console.log("shared cart:", sharedCart);
 
   const tabs = [
     { id: 'browse' as const, label: 'Browse', icon: ShoppingBag },
-    { id: 'cart' as const, label: 'Cart', icon: ShoppingCart, badge: cartItemsCount },
+    { id: 'cart' as const, label: 'Cart', icon: ShoppingCart, badge: personalCart?.length },
     { id: 'orders' as const, label: 'Orders', icon: Package },
-    { id: 'wishlist' as const, label: 'Wishlist', icon: Heart },
   ];
 
   const sharedTabs = [
     { id: 'browse' as const, label: 'Browse', icon: ShoppingBag },
-    { id: 'cart' as const, label: 'Shared Cart', icon: ShoppingCart, badge: cartItemsCount },
+    { id: 'cart' as const, label: 'Shared Cart', icon: ShoppingCart, badge: sharedCart?.length },
     { id: 'orders' as const, label: 'Orders', icon: Package }
   ];
 
@@ -53,7 +55,7 @@ export const ShoppingHeader = ({ cartItemsCount, activeTab, onTabChange }: Shopp
 
           {/* Right section */}
          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
-            <ActiveUsersDropdown />
+            {roomCode && <ActiveUsersDropdown />}
             <ThemeToggle />
 
             <UserProfileDropdown />

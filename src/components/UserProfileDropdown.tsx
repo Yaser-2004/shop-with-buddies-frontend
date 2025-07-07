@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 export const UserProfileDropdown = () => {
   const { user, token } = useAppContext();
-  console.log("UserProfileDropdown user:", user);
+//   console.log("UserProfileDropdown user:", user);
   
   // Mock user data
 //   const user = {

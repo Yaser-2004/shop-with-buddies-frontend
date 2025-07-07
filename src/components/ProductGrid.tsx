@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Heart, ShoppingCart, ThumbsUp, ThumbsDown, Star, Share, Filter, Grid, List } from 'lucide-react';
+import { Heart, ShoppingCart, ThumbsUp, ThumbsDown, Star, Share, Filter, Grid, List, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/pages/Index';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { socket } from '@/lib/socket';
+import { useAppContext } from '@/context/AppContext';
 
 interface ProductGridProps {
   onProductSelect: (product: Product) => void;
@@ -37,6 +39,7 @@ export const ProductGrid = ({
   const [itemsPerPage] = useState(8);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const {user, sharedCart, setSharedCart, roomCode, setProducts, users} = useAppContext();
   
 
   //fetching the mock products from api
@@ -48,6 +51,7 @@ export const ProductGrid = ({
       console.log("Fetched products:", response.data);
       
       setMockProducts(response.data);
+      setProducts(response.data);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       toast({
@@ -111,12 +115,54 @@ export const ProductGrid = ({
   };
 
   const handleAddToCart = (product: Product) => {
-    onAddToCart(product);
-    toast({
-      title: "Added to Cart!",
-      description: `${product.title} has been added to your cart`,
-    });
+    const roomId = localStorage.getItem('roomCode');
+
+    if (roomId) {
+      // 🧠 Collaborative mode: Emit to backend
+      socket.emit('add-to-shared-cart', {
+        roomCode: roomId,
+        item: {
+          productId: product._id,
+          addedBy: user?._id,
+        }
+      });
+
+      // ⚡️ Optimistically update shared cart immediately in UI
+      setSharedCart(prev => {
+        const existing = prev.find(p => p.productId === product._id);
+        if (existing) {
+          return prev.map(p =>
+            p.productId === product._id ? { ...p, quantity: p.quantity + 1 } : p
+          );
+        }
+        return [
+          ...prev,
+          {
+            ...product,                         // Include title, price, image, etc.
+            productId: product._id,
+            quantity: 1,
+            addedBy: user?._id,
+            votes: { up: [], down: [] }
+          }
+        ];
+      });
+
+      toast({
+        title: "Shared Cart Updated",
+        description: `${product.title} was added to the room's shared cart.`,
+      });
+
+    } else {
+      // 👤 Personal cart
+      onAddToCart(product); // Your existing handler
+      toast({
+        title: "Added to Your Cart",
+        description: `${product.title} has been added to your personal cart.`,
+      });
+    }
   };
+
+
 
   const handleAddToWishlist = (product: Product) => {
     onAddToWishlist(product);
@@ -145,7 +191,7 @@ export const ProductGrid = ({
         
         {isCollabMode && (
           <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400">
-            2 friends browsing
+            {users.length} friends browsing
           </Badge>
         )}
       </div>
@@ -224,7 +270,6 @@ export const ProductGrid = ({
         mb-8
       `}>
         {currentProducts.map((product) => (
-          <Link to={`/product/${product._id}`} key={product._id}>
             <Card  
               className={`
                 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02]
@@ -234,42 +279,52 @@ export const ProductGrid = ({
               `}
             >
               <CardContent className={`p-4 ${viewMode === 'list' ? 'flex flex-row w-full' : ''}`}>
-                <div className={`relative mb-4 ${viewMode === 'list' ? 'w-48 mr-4 mb-0' : ''}`}>
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className={`object-cover rounded-lg ${
-                      viewMode === 'list' ? 'w-full h-32' : 'w-full h-48'
-                    }`}
-                  />
-                  <div className="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full p-2">
-                    <Heart 
-                      className={`w-4 h-4 transition-colors cursor-pointer ${
-                        isInWishlist(product._id) ? 'text-red-500 fill-red-500' : 'text-gray-600 dark:text-gray-400 hover:text-red-500'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToWishlist(product);
-                      }}
-                    />
-                  </div>
-                  {!product.stock && (
-                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-semibold">Out of Stock</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className={`space-y-3 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800 dark:text-white line-clamp-2">
-                      {product.title}
-                    </h3>
-                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">{product.store}</p> */}
-                    {viewMode === 'list' && (
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">{product.description}</p>
+                  <div className={`relative mb-4 ${viewMode === 'list' ? 'w-48 mr-4 mb-0' : ''}`}>
+                    <Link to={`/product/${product._id}`} key={product._id}>
+                      <img
+                        src={product.image}
+                        alt={product.title}
+                        className={`object-cover rounded-lg ${
+                          viewMode === 'list' ? 'w-full h-32' : 'w-full h-48'
+                        }`}
+                      />
+                    </Link>
+                    {roomCode && 
+                      <button
+                        onClick={() =>
+                          socket.emit("focus-product", {
+                            roomCode,
+                            productId: product._id,
+                            sender: {
+                              _id: user._id,
+                              name: `${user.firstName}`
+                            }
+                          })
+                        }
+                        className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:scale-105 transition"
+                      >
+                        <Eye className="w-4 h-4 text-blue-600" />
+                      </button>
+                    }
+                    {!product.stock && (
+                      <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-semibold">Out of Stock</span>
+                      </div>
                     )}
                   </div>
+
+                <div className={`space-y-3 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+                  <Link to={`/product/${product._id}`} key={product._id}>
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-800 dark:text-white line-clamp-2">
+                        {product.title}
+                      </h3>
+                      {/* <p className="text-sm text-gray-500 dark:text-gray-400">{product.store}</p> */}
+                      {viewMode === 'list' && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">{product.description}</p>
+                      )}
+                    </div>
+                  </Link>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -313,7 +368,7 @@ export const ProductGrid = ({
                     <div className="flex space-x-2">
                       <Button
                         size='sm'
-                        className="bg-blue-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        className="bg-blue-600"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAddToCart(product);
@@ -328,7 +383,6 @@ export const ProductGrid = ({
                 </div>
               </CardContent>
             </Card>
-          </Link>
         ))}
       </div>
 

@@ -9,6 +9,11 @@ import { ShoppingCart } from '@/components/ShoppingCart';
 import { OrderHistory } from '@/components/OrderHistory';
 import { VideoCallPanel } from '@/components/VideoCallPanel';
 import { useAppContext } from '@/context/AppContext.jsx';
+import axios from 'axios';
+import { socket } from '@/lib/socket';
+import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { FocusedProductModal } from '@/components/FocusedProductModal';
 
 export interface Product {
   _id: string;
@@ -29,7 +34,69 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<'browse' | 'cart' | 'orders' | 'wishlist'>('browse');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
-  const { sharedCart, username, roomCode, setRoomCode } = useAppContext();
+  const { sharedCart, username, roomCode, setRoomCode, user, setSharedCart, products } = useAppContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // const userId = user?._id;
+
+    const fetchCart = async () => {
+      try {
+        if (roomCode) {
+          const res = await axios.get(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/rooms/${roomCode}/cart`);
+          // console.log("Fetched shared cart:", res.data);
+          setSharedCart(res.data.cart);
+        }
+        // } else if (userId) {
+        //   const res = await axios.get(`/api/users/${userId}/cart`);
+        //   setPersonalCart(res.data.cart);
+        // }
+      } catch (err) {
+        console.error("Failed to fetch cart:", err);
+      }
+    };
+
+    fetchCart();
+  }, []);
+  
+  
+  useEffect(() => {
+    if (!roomCode) return;
+
+    console.log("Joining room for shared cart updates:", roomCode);
+
+    const handleCartUpdate = (updatedCart) => {
+      setSharedCart(updatedCart); // Replace the shared cart entirely
+    };
+
+    socket.on('cart-updated', handleCartUpdate);
+    
+    return () => {
+      socket.off('cart-updated', handleCartUpdate);
+    };
+  }, [roomCode, setSharedCart]);
+
+
+  useEffect(() => {
+    const handleRoomEnded = () => {
+      // Clear context + localStorage
+      localStorage.removeItem('roomCode');
+      setSharedCart([]);
+      setRoomCode(null);
+      navigate('/');
+      toast({
+        title: "Room Ended",
+        description: "The shopping room has been ended by the host.",
+        variant: "destructive",
+      });
+    };
+
+    socket.on('room-ended', handleRoomEnded);
+
+    return () => {
+      socket.off('room-ended', handleRoomEnded);
+    };
+  }, []);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     setCartItems(prev => {
@@ -73,7 +140,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray/white-900 dark:via-purple-900 dark:to-gray-800">
       <ShoppingHeader 
-        cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
@@ -84,7 +150,7 @@ const Index = () => {
             {!localStorage.getItem('roomCode') ? (
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-8">
-                  <h1 className="text-4xl md:text-5xl font-bold bg-blue-600 bg-clip-text text-transparent mb-4">
+                  <h1 className="text-4xl md:text-5xl font-bold text-blue-600 mb-4">
                     Shop Together, Decide Together
                   </h1>
                   <p className="text-lg md:text-3xl text-blue-600 dark:text-blue-500 mb-6">
@@ -125,6 +191,7 @@ const Index = () => {
                     isCollabMode={true}
                   />
                 </div>
+                <FocusedProductModal products={products} />
                 
                 {/* <div className="lg:col-span-1">
                   <ChatPanel roomId={roomCode} />
@@ -135,12 +202,7 @@ const Index = () => {
         )}
 
         {activeTab === 'cart' && (
-          <ShoppingCart 
-            cartItems={cartItems}
-            onUpdateQuantity={updateCartQuantity}
-            onAddToWishlist={addToWishlist}
-            isInWishlist={isInWishlist}
-          />
+          <ShoppingCart />
         )}
 
         {activeTab === 'orders' && <OrderHistory />}
