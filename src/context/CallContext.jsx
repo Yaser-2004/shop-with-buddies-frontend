@@ -69,7 +69,7 @@ export const CallProvider = ({ children }) => {
   const acceptIncomingCall = async () => {
     if (!incomingCall) return;
 
-    const response = await axios.post("http://localhost:5000/agora/token", {
+    const response = await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/agora/token`, {
       channelName: incomingCall.channelName,
       uid,
     });
@@ -83,7 +83,7 @@ export const CallProvider = ({ children }) => {
   const startCall = async (roomId) => {
     const channelName = roomId;
 
-    const response = await axios.post("http://localhost:5000/agora/token", {
+    const response = await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/agora/token`, {
       channelName,
       uid,
     });
