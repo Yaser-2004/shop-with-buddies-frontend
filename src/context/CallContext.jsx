@@ -1,146 +1,134 @@
-// src/context/CallContext.jsx
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { socket } from '@/lib/socket';
+// src/context/CallContext.tsx
+import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createAgoraClient,
+  joinCall,
+  leaveCall,
+  toggleMute,
+} from "@/lib/useAgoraCall";
+import { socket } from "@/lib/socket";
+import { useAppContext } from "@/context/AppContext";
+import axios from "axios";
 
-const CallContext = createContext();
+const CallContext = createContext(null);
 
 export const CallProvider = ({ children }) => {
   const [callActive, setCallActive] = useState(false);
-  const [remoteStream, setRemoteStream] = useState(null);
-  const [localStream, setLocalStream] = useState(null);
-  const peerConnectionRef = useRef(null);
-  const [incomingCall, setIncomingCall] = useState(null); // ✅ Add this
+  const [localTrack, setLocalTrack] = useState(null);
+  const [remoteUsers, setRemoteUsers] = useState([]);
+  const [muted, setMuted] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [client, setClient] = useState(null); // 🆕 store client
 
+  const { user, roomCode } = useAppContext();
+  const uid = String(user?._id || Math.floor(Math.random() * 10000));
 
-  const servers = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-    ],
+  useEffect(() => {
+    socket.on("start-agora-call", ({ token, channelName, fromUser }) => {
+      setIncomingCall({ token, channelName, fromUser });
+    });
+
+    return () => {
+      socket.off("start-agora-call");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!roomCode || !user?._id) return;
+
+    socket.emit("join-room", { roomCode, userId: user._id });
+
+    socket.on("incoming-agora-call", ({ token, channelName, fromUser }) => {
+      console.log("📞 Incoming Agora call from", channelName);
+      setIncomingCall({ token, channelName, fromUser });
+    });
+
+    return () => {
+      socket.off("incoming-agora-call");
+    };
+  }, [roomCode, user?._id]);
+
+  const joinAgoraCall = async ({ token, channelName }) => {
+    const newClient = createAgoraClient();
+    setClient(newClient);
+
+    const { localTrack: track } = await joinCall({
+      client: newClient,
+      appId: import.meta.env.VITE_AGORA_APP_ID,
+      token,
+      channel: channelName,
+      uid,
+      onRemoteUsersUpdated: (user) =>
+        setRemoteUsers((prev) => [...prev, user]),
+    });
+
+    setLocalTrack(track);
+    setCallActive(true);
   };
 
-  const startCall = async (roomCode) => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setLocalStream(stream);
+  const acceptIncomingCall = async () => {
+    if (!incomingCall) return;
 
-      const pc = new RTCPeerConnection(servers);
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    const response = await axios.post("http://localhost:5000/agora/token", {
+      channelName: incomingCall.channelName,
+      uid,
+    });
 
-      pc.ontrack = (event) => {
-        setRemoteStream(event.streams[0]);
-      };
+    const token = response.data.token;
+    await joinAgoraCall({ token, channelName: incomingCall.channelName });
 
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('ice-candidate', { candidate: event.candidate, roomCode });
-        }
-      };
-
-      peerConnectionRef.current = pc;
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      socket.emit('call-offer', { offer, roomCode });
-      setCallActive(true);
-    } catch (err) {
-      console.error('Error starting call:', err);
-    }
+    setIncomingCall(null);
   };
 
-  const acceptCall = async ({ offer, roomCode }) => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setLocalStream(stream);
+  const startCall = async (roomId) => {
+    const channelName = roomId;
 
-      const pc = new RTCPeerConnection(servers);
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    const response = await axios.post("http://localhost:5000/agora/token", {
+      channelName,
+      uid,
+    });
 
-      pc.ontrack = (event) => {
-        setRemoteStream(event.streams[0]);
-      };
+    const { token } = response.data;
 
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('ice-candidate', { candidate: event.candidate, roomCode });
-        }
-      };
+    socket.emit("start-agora-call", {
+      roomCode: roomId,
+      token,
+      channelName,
+      fromUser: user.firstName,
+    });
 
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      socket.emit('call-answer', { answer, roomCode });
-      peerConnectionRef.current = pc;
-      setCallActive(true);
-    } catch (err) {
-      console.error('Error accepting call:', err);
-    }
+    await joinAgoraCall({ token, channelName });
   };
 
-  const handleAnswer = async ({ answer }) => {
-    const pc = peerConnectionRef.current;
-    if (!pc) return;
-    await pc.setRemoteDescription(new RTCSessionDescription(answer));
-  };
-
-  const handleICE = ({ candidate }) => {
-    const pc = peerConnectionRef.current;
-    if (!pc || !candidate) return;
-    pc.addIceCandidate(new RTCIceCandidate(candidate));
-  };
-
-  const endCall = () => {
-    const pc = peerConnectionRef.current;
-    if (pc) {
-      pc.close();
-      peerConnectionRef.current = null;
-    }
-    localStream?.getTracks().forEach(track => track.stop());
-    setLocalStream(null);
-    setRemoteStream(null);
+  const endCall = async () => {
+    await leaveCall(client, localTrack);
+    setLocalTrack(null);
+    setRemoteUsers([]);
     setCallActive(false);
+    setClient(null);
   };
 
-//   useEffect(() => {
-//     socket.on('call-offer', acceptCall);
-//     socket.on('call-answer', handleAnswer);
-//     socket.on('ice-candidate', handleICE);
-
-//     return () => {
-//       socket.off('call-offer', acceptCall);
-//       socket.off('call-answer', handleAnswer);
-//       socket.off('ice-candidate', handleICE);
-//     };
-//   }, []);
-
-    useEffect(() => {
-        socket.on('call-offer', ({ offer, roomCode }) => {
-            console.log('📞 Incoming call offer received:', roomCode);
-            setIncomingCall({ offer, roomCode }); // ✅ Store the call info for UI
-        });
-
-        socket.on('call-answer', handleAnswer);
-        socket.on('ice-candidate', handleICE);
-
-        return () => {
-            socket.off('call-offer');
-            socket.off('call-answer');
-            socket.off('ice-candidate');
-        };
-    }, []);
+  const muteAudio = (mute) => {
+    toggleMute(localTrack, mute);
+    setMuted(mute);
+  };
 
   return (
-    <CallContext.Provider value={{
-      callActive,
-      setCallActive,
-      startCall,
-      endCall,
-      localStream,
-      remoteStream,
-      incomingCall,
-      acceptCall
-    }}>
+    <CallContext.Provider
+      value={{
+        callActive,
+        setCallActive,
+        startCall,
+        endCall,
+        muteAudio,
+        muted,
+        localTrack,
+        remoteUsers,
+        incomingCall,
+        acceptIncomingCall,
+        setIncomingCall,
+      }}
+    >
       {children}
     </CallContext.Provider>
   );

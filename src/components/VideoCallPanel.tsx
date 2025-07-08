@@ -15,7 +15,7 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const { toast } = useToast();
   const { users } = useAppContext();
-  const { startCall, endCall, localStream, callActive, setCallActive } = useCall();
+  const { startCall, endCall, localStream, callActive, setCallActive, muteAudio } = useCall();
 
   const handleStartCall = () => {
     console.log("Starting call in room:", roomId);
@@ -37,19 +37,9 @@ export const VideoCallPanel = ({ roomId }: VideoCallPanelProps) => {
   };
 
   const toggleMute = () => {
-    const newMuteState = !isMuted;
-    setIsMuted(newMuteState);
-
-    if (localStream) {
-      localStream.getAudioTracks().forEach((track) => {
-        track.enabled = !newMuteState;
-      });
-    }
-
-    toast({
-      title: newMuteState ? "Muted" : "Unmuted",
-      description: newMuteState ? "Your microphone is now off" : "Your microphone is now on",
-    });
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    muteAudio(newMuted);
   };
 
   if (!callActive) {
