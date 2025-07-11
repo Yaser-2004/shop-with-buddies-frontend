@@ -38,6 +38,16 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+      if (!socket || !user || !roomCode) return;
+  
+      // Emit join-room again on initial load / reconnect
+      socket.emit("join-room", {
+        roomCode,
+        userId: user._id,
+      });
+    }, [user, roomCode]);
+
+  useEffect(() => {
     // const userId = user?._id;
 
     const fetchCart = async () => {

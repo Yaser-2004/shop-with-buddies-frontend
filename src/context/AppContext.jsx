@@ -28,15 +28,15 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!socket || !user || !roomCode) return;
+  // useEffect(() => {
+  //   if (!socket || !user || !roomCode) return;
 
-    // Emit join-room again on initial load / reconnect
-    socket.emit("join-room", {
-      roomCode,
-      userId: user._id,
-    });
-  }, [socket, user, roomCode]);
+  //   // Emit join-room again on initial load / reconnect
+  //   socket.emit("join-room", {
+  //     roomCode,
+  //     userId: user._id,
+  //   });
+  // }, [socket, user, roomCode]);
 
 
   return (

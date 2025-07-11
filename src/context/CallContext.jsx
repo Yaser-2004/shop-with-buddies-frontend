@@ -36,7 +36,7 @@ export const CallProvider = ({ children }) => {
   useEffect(() => {
     if (!roomCode || !user?._id) return;
 
-    socket.emit("join-room", { roomCode, userId: user._id });
+    // socket.emit("join-room", { roomCode, userId: user._id });
 
     socket.on("incoming-agora-call", ({ token, channelName, fromUser }) => {
       console.log("📞 Incoming Agora call from", channelName);
@@ -135,3 +135,4 @@ export const CallProvider = ({ children }) => {
 };
 
 export const useCall = () => useContext(CallContext);
+

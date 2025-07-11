@@ -35,27 +35,29 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
   };
 
     useEffect(() => {
-      const handleUserJoined = (data: { user: any }) => {
-        console.log('User joined:', data.user);
-        setUsers((prev) => {
-          // Avoid duplicates
-          const exists = prev.find((u) => u._id === data.user._id);
-          console.log('User already exists:', exists);
-          return exists ? prev : [...prev, data.user];
-        });
-      };
+      // const handleUserJoined = (data: { user: any }) => {
+      //   console.log('User joined:', data.user);
+      //   setUsers((prev) => {
+      //     // Avoid duplicates
+      //     const exists = prev.find((u) => u._id === data.user._id);
+      //     console.log('User already exists:', exists);
+      //     return exists ? prev : [...prev, data.user];
+      //   });
+      // };
 
-      const handleUserLeft = (data: { userId: string }) => {
-        console.log('User left:', data.userId);
-        setUsers((prev) => prev.filter((u) => u._id !== data.userId));
-      };
+      // const handleUserLeft = (data: { userId: string }) => {
+      //   console.log('User left:', data.userId);
+      //   setUsers((prev) => prev.filter((u) => u._id !== data.userId));
+      // };
+      const refresh = () => fetchRoomUsers();
 
-      socket.on('user-joined', handleUserJoined);
-      socket.on('user-left', handleUserLeft);
+
+      socket.on('user-joined', refresh);
+      socket.on('user-left', refresh);
 
       return () => {
-        socket.off('user-joined', handleUserJoined);
-        socket.off('user-left', handleUserLeft);
+        socket.off('user-joined', refresh);
+        socket.off('user-left', refresh);
       };
     }, []);
 
@@ -63,6 +65,9 @@ export const UserPresence = ({ roomId }: UserPresenceProps) => {
 
   useEffect(() => {
     fetchRoomUsers();
+    const t = setTimeout(fetchRoomUsers, 500);
+
+    return () => clearTimeout(t);
   }, [roomId]);
 
   const leaveRoom = () => {

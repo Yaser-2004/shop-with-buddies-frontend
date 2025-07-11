@@ -24,6 +24,9 @@ export const ShoppingCart = () => {
   const roomCode = localStorage.getItem('roomCode');
   const isInRoom = !!roomCode;
   const cartItems = isInRoom ? sharedCart : personalCart;
+  const [paymentMode, setPaymentMode] = useState<'split' | 'individual'>('individual');
+  const [isWaiting, setIsWaiting] = useState(false);
+
 
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{ code: string, discount: number } | null>(null);
@@ -49,11 +52,23 @@ export const ShoppingCart = () => {
 
   const isInWishlist = (id: string) => false; // Replace with actual logic
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const allUsers = [...new Set(cartItems.map(item => item.addedBy))];
+
+  const filteredItems = paymentMode === 'individual'
+    ? cartItems.filter(item => item.addedBy === user?._id)
+    : cartItems;
+
+  const subtotal = paymentMode === 'individual'
+    ? filteredItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0) / allUsers.length;
+
   const tax = subtotal * 0.08;
   const shipping = subtotal > 50 ? 0 : 9.99;
   const promoDiscount = appliedPromo ? subtotal * (appliedPromo.discount / 100) : 0;
   const total = subtotal + tax + shipping - promoDiscount;
+
+
+
 
   const handleApplyPromo = () => {
     const validPromoCodes = {
@@ -68,9 +83,80 @@ export const ShoppingCart = () => {
     }
   };
 
-  const handleCheckout = () => {
-    toast({ title: "Proceeding to checkout", description: "Integrate payment logic here." });
+  const handleCheckout = async () => {
+    if (!user?._id) return;
+
+    // if in room – wait for everyone (you already do this)
+    if (isInRoom) {
+      setIsWaiting(true);
+      socket.emit("checkout-confirm", { roomCode, userId: user._id });
+      toast({ title: "Waiting for others…" });
+      return;
+    } else {
+        // 🚀 personal‑cart direct checkout
+      await createOrderAndClearCart(filteredItems, subtotal);
+    }
   };
+
+  useEffect(() => {
+    const onAllPaid = async () => {
+      await createOrderAndClearCart(filteredItems, subtotal);
+      setIsWaiting(false);
+      toast({ title: "Checkout complete!" });
+    };
+
+    socket.on("all-users-confirmed-checkout", onAllPaid);
+
+    return () => {
+      socket.off("all-users-confirmed-checkout", onAllPaid);
+    };
+  /*  empty dependency array → runs once  */
+  }, []);
+
+  const createOrderAndClearCart = async (items, amount) => {
+    if (!items.length) return;
+    try {
+      await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/orders/checkout`, {
+        userId: user._id,
+        roomCode,
+        paymentMode,
+        items: items.map(i => ({
+          productId: i.productId || i._id,
+          quantity : i.quantity,
+          price    : i.price,
+        })),
+        total: amount
+      });
+
+      /* Clear carts in React state */
+      if(isInRoom) {
+        setSharedCart([]);
+      } else {
+        setPersonalCart([]);
+      }
+
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Checkout failed", variant: "destructive" });
+    }
+  };
+
+  useEffect(() => {
+    socket.on("all-users-confirmed-checkout", () => {
+      setIsWaiting(false); // hide loader
+      toast({
+        title: "All users confirmed!",
+        description: "Proceeding to final payment..."
+      });
+      // navigate or show payment success UI
+    });
+
+    return () => {
+      socket.off("all-users-confirmed-checkout");
+    };
+  }, []);
+
+
 
   if (cartItems.length === 0) {
     return (
@@ -89,6 +175,16 @@ export const ShoppingCart = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {isWaiting && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center">
+            <CreditCard className="animate-spin w-10 h-10 text-blue-600 mb-4 mx-auto" />
+            <p className="text-lg font-semibold text-gray-800">Waiting for others to confirm...</p>
+            <p className="text-sm text-gray-500">The checkout will begin once everyone proceeds.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cart Items */}
         <div className="lg:col-span-2">
@@ -165,8 +261,25 @@ export const ShoppingCart = () => {
           </Card>
         </div>
 
+
         {/* Order Summary */}
-        <div className="lg:col-span-1">
+          <div className="lg:col-span-1">
+            <div className="flex justify-end gap-4 mb-4">
+            <label className="text-sm font-medium mt-1">Payment Mode:</label>
+            <Button
+              variant={paymentMode === 'individual' ? 'default' : 'outline'}
+              onClick={() => setPaymentMode('individual')}
+            >
+              Pay Individually
+            </Button>
+            <Button
+              variant={paymentMode === 'split' ? 'default' : 'outline'}
+              onClick={() => setPaymentMode('split')}
+            >
+              Split Payment
+            </Button>
+          </div>
+
           <Card className="sticky top-32">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
