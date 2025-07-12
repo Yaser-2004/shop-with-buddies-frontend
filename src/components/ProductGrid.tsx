@@ -40,6 +40,7 @@ export const ProductGrid = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const {user, sharedCart, setSharedCart, roomCode, setProducts, users} = useAppContext();
+  const [loading, setLoading] = useState(false);
   
 
   //fetching the mock products from api
@@ -47,6 +48,7 @@ export const ProductGrid = ({
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/products`); // Adjust the endpoint as needed
       console.log("Fetched products:", response.data);
       
@@ -59,6 +61,8 @@ export const ProductGrid = ({
         description: "Failed to load products. Please try again later.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -177,6 +181,19 @@ export const ProductGrid = ({
   //   onProductSelect(product);
   //   navigate(`/product/${product.id}`);
   // };
+
+  if (loading) {
+    /* choose one of the two – uncomment the one you like */
+
+    /* 1) very simple text loader */
+    return (
+      <div className="flex items-center justify-center py-20">
+        <span className="animate-pulse text-gray-500 dark:text-gray-400">
+          Loading products…
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 md:p-6 h-full">
