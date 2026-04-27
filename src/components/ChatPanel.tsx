@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { socket } from '@/lib/socket'; // make sure your socket is exported from a shared file
 import ReactMarkdown from 'react-markdown';
@@ -10,7 +11,7 @@ const ChatInterface = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const {user} = useAppContext();
+  const { user } = useAppContext();
 
   const toggleChat = () => setIsOpen(!isOpen);
   const bottomRef = useRef(null);
@@ -22,15 +23,29 @@ const ChatInterface = () => {
     if (!socket.connected) socket.connect();
 
     // Join the room on socket connection
-    // socket.emit('join-room', { roomCode, username });
+    socket.emit('join-room', { roomCode, user });
 
     // Listen for incoming messages
     socket.on('receive-message', (message) => {
       setMessages(prev => [...prev, message]);
     });
 
+    socket.on('search-results', (data) => {
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: "System",
+          type: "product_results",
+          products: data.products,
+          timestamp: new Date().toISOString(),
+        }
+      ]);
+    });
+
     return () => {
       socket.off('receive-message');
+      socket.off('search-results');
+
     };
   }, [roomCode, user]);
 
@@ -51,9 +66,13 @@ const ChatInterface = () => {
     socket.emit('send-message', { roomCode, message: messageData });
 
     // Add to local state immediately
-    setMessages(prev => [...prev, messageData]);
+    // setMessages(prev => [...prev, messageData]);
 
     setInput('');
+  };
+
+  const handleSearch = (metadata) => {
+    socket.emit('search-products', { roomCode, metadata });
   };
 
   return (
@@ -86,14 +105,40 @@ const ChatInterface = () => {
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.sender === user?.firstName ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`px-3 py-2 bg-blue-500 rounded-lg max-w-[80%] text-sm ${
-                      msg.sender === user?.firstName
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 text-gray-800'
-                    }`}
+                    className={`px-3 py-2 rounded-lg max-w-[80%] text-sm ${msg.sender === user?.firstName
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-800'
+                      }`}
                   >
                     <p className="text-xs font-semibold mb-1">{msg.sender}</p>
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+
+                    {/* Normal message */}
+                    {msg.type !== "product_results" && (
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    )}
+
+                    {/* 🔥 Search button */}
+                    {msg.intent === "product_search" && (
+                      <button
+                        onClick={() => handleSearch(msg.metadata)}
+                        className="mt-2 px-2 py-1 text-xs bg-green-500 text-white rounded"
+                      >
+                        Search Products
+                      </button>
+                    )}
+
+                    {/* 🔥 Product results */}
+                    {msg.type === "product_results" && (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {msg.products.map((p, i) => (
+                          <Link to={`/product/${p._id}`} key={i} className="bg-white text-black text-xs p-2 rounded shadow">
+                            <img src={p.image} className="w-full h-16 object-cover rounded" />
+                            <div className="font-semibold mt-1">{p.title}</div>
+                            <div>₹{p.price}</div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
