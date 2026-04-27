@@ -19,18 +19,38 @@ const ChatInterface = () => {
   const roomCode = localStorage.getItem('roomCode') || '';
 
   useEffect(() => {
-    if (!socket || !roomCode || !user) return;
-    if (!socket.connected) socket.connect();
+    if (!roomCode || !user) return;
 
-    // Join the room on socket connection
-    socket.emit('join-room', { roomCode, user });
+    const handleConnect = () => {
+      console.log("Connected:", socket.id);
 
-    // Listen for incoming messages
-    socket.on('receive-message', (message) => {
+      socket.emit("join-room", {
+        roomCode,
+        userId: user._id, // ✅ correct
+      });
+    };
+
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.on("connect", handleConnect);
+    }
+
+    socket.on("receive-message", (message) => {
       setMessages(prev => [...prev, message]);
     });
 
-    socket.on('search-results', (data) => {
+    socket.on("message-updated", (updatedMsg) => {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === updatedMsg.id
+            ? { ...msg, ...updatedMsg }
+            : msg
+        )
+      );
+    });
+
+    socket.on("search-results", (data) => {
       setMessages(prev => [
         ...prev,
         {
@@ -43,9 +63,10 @@ const ChatInterface = () => {
     });
 
     return () => {
-      socket.off('receive-message');
-      socket.off('search-results');
-
+      socket.off("connect", handleConnect);
+      socket.off("receive-message");
+      socket.off("message-updated");
+      socket.off("search-results");
     };
   }, [roomCode, user]);
 
@@ -57,6 +78,7 @@ const ChatInterface = () => {
     if (!input.trim()) return;
 
     const messageData = {
+      id: Date.now(), // ✅ unique id
       sender: user?.firstName || 'Anonymous',
       text: input,
       timestamp: new Date().toISOString(),
