@@ -40,7 +40,7 @@ const ChatInterface = () => {
       setMessages(prev => [...prev, message]);
     });
 
-    socket.on("message-updated", (updatedMsg) => {
+    socket.on("update-message", (updatedMsg) => {
       setMessages(prev =>
         prev.map(msg =>
           msg.id === updatedMsg.id
@@ -65,7 +65,7 @@ const ChatInterface = () => {
     return () => {
       socket.off("connect", handleConnect);
       socket.off("receive-message");
-      socket.off("message-updated");
+      socket.off("update-message");
       socket.off("search-results");
     };
   }, [roomCode, user]);

@@ -18,6 +18,7 @@ export const ShoppingCart = () => {
     setPersonalCart,
     sharedCart,
     setSharedCart,
+    users
   } = useAppContext();
   const { toast } = useToast();
 
@@ -36,7 +37,7 @@ export const ShoppingCart = () => {
       // Optional: Add socket emit to update quantity
       // e.g., socket.emit('update-quantity', { productId, quantity, roomCode });
     } else {
-      setPersonalCart(prev => 
+      setPersonalCart(prev =>
         prev.map(item => item._id === productId ? { ...item, quantity } : item)
       );
     }
@@ -58,9 +59,20 @@ export const ShoppingCart = () => {
     ? cartItems.filter(item => item.addedBy === user?._id)
     : cartItems;
 
-  const subtotal = paymentMode === 'individual'
-    ? filteredItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0) / allUsers.length;
+  const fullTotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const userCount = Math.max(users.length, 1);
+
+  const subtotal =
+    paymentMode === "split"
+      ? fullTotal / userCount
+      : filteredItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
 
   const tax = subtotal * 0.08;
   const shipping = subtotal > 50 ? 0 : 9.99;
@@ -93,8 +105,8 @@ export const ShoppingCart = () => {
       toast({ title: "Waiting for others…" });
       return;
     } else {
-        // 🚀 personal‑cart direct checkout
-      await createOrderAndClearCart(filteredItems, subtotal);
+      // 🚀 personal‑cart direct checkout
+      await createOrderAndClearCart(cartItems, subtotal);
     }
   };
 
@@ -110,11 +122,16 @@ export const ShoppingCart = () => {
     return () => {
       socket.off("all-users-confirmed-checkout", onAllPaid);
     };
-  /*  empty dependency array → runs once  */
+    /*  empty dependency array → runs once  */
   }, []);
 
   const createOrderAndClearCart = async (items, amount) => {
     if (!items.length) return;
+    const fullTotal = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
     try {
       await axios.post(`${import.meta.env.VITE_PUBLIC_BASEURL}/api/orders/checkout`, {
         userId: user._id,
@@ -122,14 +139,14 @@ export const ShoppingCart = () => {
         paymentMode,
         items: items.map(i => ({
           productId: i.productId || i._id,
-          quantity : i.quantity,
-          price    : i.price,
+          quantity: i.quantity,
+          price: i.price,
         })),
-        total: amount
+        total: paymentMode === "split" ? fullTotal : amount
       });
 
       /* Clear carts in React state */
-      if(isInRoom) {
+      if (isInRoom) {
         setSharedCart([]);
       } else {
         setPersonalCart([]);
@@ -263,8 +280,8 @@ export const ShoppingCart = () => {
 
 
         {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="flex justify-end gap-4 mb-4">
+        <div className="lg:col-span-1">
+          <div className="flex justify-end gap-4 mb-4">
             <label className="text-sm font-medium mt-1">Payment Mode:</label>
             <Button
               variant={paymentMode === 'individual' ? 'default' : 'outline'}
@@ -331,6 +348,13 @@ export const ShoppingCart = () => {
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span><span>${total.toFixed(2)}</span>
                 </div>
+                {paymentMode === "split" && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      Each of the {userCount} members pays: <strong>${subtotal.toFixed(2)}</strong>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {shipping > 0 && (
